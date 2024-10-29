@@ -1,0 +1,6 @@
+{
+    "pylint.enabled": true,
+    "python.testing.pytestEnabled": true,
+    "editor.formatOnSave": true,
+    "python.analysis.typeCheckingMode": "standard",
+}

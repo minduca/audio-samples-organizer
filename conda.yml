@@ -1,0 +1,9 @@
+name: audio-samples-organizer
+dependencies:
+  - python=3.13
+  - pip
+  - pip:
+    - soundfile
+    - numpy
+    - black
+    - pylint
