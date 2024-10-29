@@ -21,7 +21,7 @@ class TitleCaseFileFormatter(FileHandler):
     """Sanitizes and normalizes the file name"""
 
     def handle(self, file: pathlib.Path) -> bool:
-        file_new = file.with_name(self._normalise_filename(file))
+        file_new = file.with_name(self._normalize_filename(file))
 
         if file_new.name != file.name:
             print(f"{file.name} -> {file_new.name}")
@@ -32,7 +32,7 @@ class TitleCaseFileFormatter(FileHandler):
     def close(self, count_files_changed: int):
         print(f"{count_files_changed} files renamed")
 
-    def _normalise_filename(self, file: pathlib.Path):
+    def _normalize_filename(self, file: pathlib.Path):
         """Sanitizes and normalizes the file name"""
         stem = re.sub("[^0-9a-zA-Z]+", " ", file.stem).strip().title()
         suffix = file.suffix.lower().strip() if file.suffix else ""

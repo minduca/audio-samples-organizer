@@ -1,6 +1,6 @@
 # audio-samples-organizer
 
-Converts samples to an audio format supported by the Alesis Strike Multipad and organizes the files names. The implementation itself is very naive.
+Converts samples to an audio format supported by the Alesis Strike Multipad and normalizes the files names. The implementation itself is very naive.
 
 ⚠️ IMPORTANT : These scripts changes files recursively. That said, make sure to back up your files before running them.
 
