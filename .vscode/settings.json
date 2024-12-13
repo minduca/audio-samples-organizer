@@ -11,4 +11,14 @@
     "pylint.enabled": true,
     "python.testing.pytestEnabled": true,
     "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        },
+    },
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
 }
