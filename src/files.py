@@ -110,6 +110,9 @@ def update_files(
     root_dir: str, predicate: Callable[[pathlib.Path], bool], cmd_getter: FileCmdGetter
 ):
     """Iterates files recursively and apply the handler"""
+
+    print("Checking files...")
+
     commands: list[Cmd] = []
 
     for root, _, files in os.walk(root_dir):

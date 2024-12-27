@@ -1,9 +1,10 @@
 name: audio-samples-organizer
 dependencies:
-  - python=3.13
+  - python=3.10
   - pip
   - pip:
-    - soundfile
     - numpy
     - black
     - pylint
+    - pydub
+    - mutagen
