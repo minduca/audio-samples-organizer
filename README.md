@@ -1,6 +1,8 @@
 # audio-samples-organizer
 
-Converts samples to a different audio format. This repository is unofficial and has neither affiliation nor support from any manufacturer whatsoever.
+Converts samples to a different audio format, perfoming a superset of operations to sanitize the file name, clear metadata and convert the sample rate and sample width of the audio file.
+
+This repository is unofficial and has neither affiliation nor support from any manufacturer whatsoever.
 
 ⚠️ IMPORTANT : These scripts changes files recursively. That said, make sure to back up your files before running them. In addition, the implementation itself is very naive. That said, please be cautious.
 

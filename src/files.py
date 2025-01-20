@@ -148,3 +148,11 @@ def update_files(
             print("The operation was aborted")
     else:
         print("There is no operation to be performed")
+
+
+def file_has_format(file: pathlib.Path, file_format: str):
+    """
+    Returns True if the file extension is the same as the argument specified. Otherwise, returns False.
+    The comparison is case-insensitive.
+    """
+    return file.is_file() and file.suffix.lower().strip().strip(".") == file_format

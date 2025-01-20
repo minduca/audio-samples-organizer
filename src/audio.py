@@ -132,6 +132,10 @@ class AudioMetadataDeleteCmdGetter(files.FileCmdGetter):
             self.audio.save()
 
     def get_command(self, file: pathlib.Path):
+
+        if not files.file_has_format(file, "wav"):
+            raise NotImplementedError("Only 'wav' files are supported at the moment.")
+
         audio = WAVE(str(file))
 
         if audio.items():
@@ -146,7 +150,7 @@ def normalize_audio_filenames(
     """Normalizes audio files names"""
     files.update_files(
         root_dir,
-        predicate=lambda file: _has_file_format(file, file_format),
+        predicate=lambda file: files.file_has_format(file, file_format),
         cmd_getter=formatter,
     )
 
@@ -156,7 +160,7 @@ def convert_audio_files(root_dir: str, target_output: AudioTargetOutput):
 
     files.update_files(
         root_dir,
-        predicate=lambda file: _has_file_format(file, target_output.format),
+        predicate=lambda file: files.file_has_format(file, target_output.format),
         cmd_getter=AudioConversionCmdGetter(target_output),
     )
 
@@ -165,11 +169,6 @@ def remove_audio_files_metadata(root_dir: str, file_format: str):
     """Removes all the metadata from files"""
     files.update_files(
         root_dir,
-        predicate=lambda file: _has_file_format(file, file_format),
+        predicate=lambda file: files.file_has_format(file, file_format),
         cmd_getter=AudioMetadataDeleteCmdGetter(),
     )
-
-
-def _has_file_format(file: pathlib.Path, file_format: str):
-    """Returns True if the file is considered to be a supported audio file"""
-    return file.is_file() and file.suffix.lower().strip().strip(".") == file_format
