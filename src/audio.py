@@ -8,14 +8,28 @@ from pydub import AudioSegment
 
 from src import files
 
-########################################################################################################
-# Supported File Type: 16-bit, mono or stereo .WAV files, 44.1 KHz Sample Rate.
-#   Source : https://cdn.inmusicbrands.com/alesis/StrikeMultipad/StrikeMultiPad-UserGuide-v1.2.pdf
-#
-AUDIO_TARGET_FORMAT = "wav"
-AUDIO_MAX_SAMPLE_RATE_HERTZ = 44100
-AUDIO_MAX_SAMPLE_WIDTH_BYTES = 2  # 16-bit corresponds to 2 bytes
-########################################################################################################
+
+@dataclass(frozen=True)
+class AudioTargetOutput:
+    """Audio convertion target output"""
+
+    format: str
+    """Audio format"""
+    max_sample_rate_hertz: int
+    """Max sample rate"""
+    max_sample_width_bytes: int
+    """Max sample width"""
+
+
+ALESIS_STRIKE_MULTIPAD_TARGET_OUTPUT = AudioTargetOutput(
+    format="wav",
+    max_sample_rate_hertz=44100,
+    max_sample_width_bytes=2,  # 16-bit corresponds to 2 bytes
+)
+"""
+Alesis Strike Multipad Supported File Type: 16-bit, mono or stereo .WAV files, 44.1 KHz Sample Rate.
+    Source : https://cdn.inmusicbrands.com/alesis/StrikeMultipad/StrikeMultiPad-UserGuide-v1.2.pdf
+"""
 
 
 @dataclass(frozen=True)
@@ -25,19 +39,22 @@ class AudioScaling:
     audio: AudioSegment
     """Sound file info"""
 
+    target_output: AudioTargetOutput
+    """Audio convertion target output"""
+
     @property
     def target_sample_rate_hertz(self):
         """Desired sample rate"""
-        return min(self.audio.frame_rate, AUDIO_MAX_SAMPLE_RATE_HERTZ)
+        return min(self.audio.frame_rate, self.target_output.max_sample_rate_hertz)
 
     @property
     def target_sample_width_bytes(self):
         """Desired sample with"""
-        return min(self.audio.sample_width, AUDIO_MAX_SAMPLE_WIDTH_BYTES)
+        return min(self.audio.sample_width, self.target_output.max_sample_width_bytes)
 
     @property
     def needs_rescaling(self):
-        """Returns True if audio needs to be converted to be supported in Alesis Strike Multipad. Otherwise, returns False"""
+        """Returns True if audio needs to be converted. Otherwise, returns False"""
         return (
             self.target_sample_width_bytes != self.audio.sample_width
             or self.target_sample_rate_hertz != self.audio.frame_rate
@@ -47,15 +64,15 @@ class AudioScaling:
         return f"{self.audio.sample_width * 8}-bit|{self.audio.frame_rate}Hz -> {self.target_sample_width_bytes * 8}-bit|{self.target_sample_rate_hertz}Hz"
 
 
-class AlesisAudioConversionCmdGetter(files.FileCmdGetter):
-    """
-    The Alesis Strike Multipad natively supports 16-bit/44.1kHz samples.
-        See https://support.alesis.com/en/support/solutions/articles/69000824218-alesis-strike-multipad-what-file-format-should-i-use-for-my-samples-
-    """
+class AudioConversionCmdGetter(files.FileCmdGetter):
+
+    def __init__(self, target_output: AudioTargetOutput):
+        super().__init__()
+        self._target_output = target_output
 
     @dataclass(frozen=True)
     class CmdConvertAudioFile(files.Cmd):
-        """Command to convert or rescale an audio file, if needed, to a format supported by the Alesis Strike Multipad"""
+        """Command to convert or rescale an audio file."""
 
         file: pathlib.Path
         """Corresponding File"""
@@ -72,20 +89,20 @@ class AlesisAudioConversionCmdGetter(files.FileCmdGetter):
             audio = self.audio_scaling.audio
             audio = audio.set_frame_rate(self.audio_scaling.target_sample_rate_hertz)
             audio = audio.set_sample_width(self.audio_scaling.target_sample_width_bytes)
-            audio.export(str(self.file), format=AUDIO_TARGET_FORMAT)
+            audio.export(str(self.file), format=self.audio_scaling.target_output.format)
 
     def get_command(self, file: pathlib.Path):
         """
-        Converts or rescale the audio file, if needed, to a format supported by the Alesis Strike Multipad
+        Converts or rescale the audio file, if needed.
         """
 
         # Read the original audio file
         audio: AudioSegment = AudioSegment.from_wav(str(file))
 
-        audio_scaling = AudioScaling(audio=audio)
+        audio_scaling = AudioScaling(audio=audio, target_output=self._target_output)
 
         if audio_scaling.needs_rescaling:
-            return AlesisAudioConversionCmdGetter.CmdConvertAudioFile(
+            return AudioConversionCmdGetter.CmdConvertAudioFile(
                 file=file, audio_scaling=audio_scaling
             )
 
@@ -123,35 +140,36 @@ class AudioMetadataDeleteCmdGetter(files.FileCmdGetter):
         return None
 
 
-def normalize_audio_filenames(root_dir: str, formatter: files.RenameFileCmdGetter):
+def normalize_audio_filenames(
+    root_dir: str, formatter: files.RenameFileCmdGetter, file_format: str
+):
     """Normalizes audio files names"""
     files.update_files(
         root_dir,
-        predicate=_is_supported_audio_file,
+        predicate=lambda file: _has_file_format(file, file_format),
         cmd_getter=formatter,
     )
 
 
-def convert_audio_files(root_dir: str):
-    """Converts audio files to a format supported by the Alesis Strike Multipad"""
+def convert_audio_files(root_dir: str, target_output: AudioTargetOutput):
+    """Converts audio files to a different format"""
+
     files.update_files(
         root_dir,
-        predicate=_is_supported_audio_file,
-        cmd_getter=AlesisAudioConversionCmdGetter(),
+        predicate=lambda file: _has_file_format(file, target_output.format),
+        cmd_getter=AudioConversionCmdGetter(target_output),
     )
 
 
-def remove_audio_files_metadata(root_dir: str):
+def remove_audio_files_metadata(root_dir: str, file_format: str):
     """Removes all the metadata from files"""
     files.update_files(
         root_dir,
-        predicate=_is_supported_audio_file,
+        predicate=lambda file: _has_file_format(file, file_format),
         cmd_getter=AudioMetadataDeleteCmdGetter(),
     )
 
 
-def _is_supported_audio_file(file: pathlib.Path):
+def _has_file_format(file: pathlib.Path, file_format: str):
     """Returns True if the file is considered to be a supported audio file"""
-    return (
-        file.is_file() and file.suffix.lower().strip().strip(".") == AUDIO_TARGET_FORMAT
-    )
+    return file.is_file() and file.suffix.lower().strip().strip(".") == file_format
