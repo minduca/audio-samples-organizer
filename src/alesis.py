@@ -8,9 +8,14 @@ from pydub import AudioSegment
 
 from src import files
 
+########################################################################################################
+# Supported File Type: 16-bit, mono or stereo .WAV files, 44.1 KHz Sample Rate.
+#   Source : https://cdn.inmusicbrands.com/alesis/StrikeMultipad/StrikeMultiPad-UserGuide-v1.2.pdf
+#
 AUDIO_TARGET_FORMAT = "wav"
 AUDIO_MAX_SAMPLE_RATE_HERTZ = 44100
 AUDIO_MAX_SAMPLE_WIDTH_BYTES = 2  # 16-bit corresponds to 2 bytes
+########################################################################################################
 
 
 @dataclass(frozen=True)
