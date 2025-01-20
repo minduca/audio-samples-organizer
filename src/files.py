@@ -114,14 +114,18 @@ def update_files(
     print("Checking files...")
 
     commands: list[Cmd] = []
+    files_count = 0
 
     for root, _, files in os.walk(root_dir):
         for file_path in files:
             file = pathlib.Path(os.path.join(root, file_path))
+            files_count += 1
             if predicate(file):
                 cmd = cmd_getter.get_command(file)
                 if cmd:
                     commands.append(cmd)
+
+    print(f"{files_count} files were found.")
 
     if commands:
         print("The following operations will be performed : ")
@@ -130,7 +134,7 @@ def update_files(
             print(cmd.operation_description)
 
         answer = input(
-            "The operation is not reversible. Do you wish to continue ? (y/N): "
+            "The operation is irreversible. Do you wish to continue ? (y/N): "
         )
 
         if answer.lower().strip() == "y":
