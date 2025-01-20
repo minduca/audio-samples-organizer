@@ -148,6 +148,7 @@ def normalize_audio_filenames(
     root_dir: str, formatter: files.RenameFileCmdGetter, file_format: str
 ):
     """Normalizes audio files names"""
+    print("File name normalization")
     files.update_files(
         root_dir,
         predicate=lambda file: files.file_has_format(file, file_format),
@@ -158,6 +159,7 @@ def normalize_audio_filenames(
 def convert_audio_files(root_dir: str, target_output: AudioTargetOutput):
     """Converts audio files to a different format"""
 
+    print("Audio file conversion")
     files.update_files(
         root_dir,
         predicate=lambda file: files.file_has_format(file, target_output.format),
@@ -167,6 +169,7 @@ def convert_audio_files(root_dir: str, target_output: AudioTargetOutput):
 
 def remove_audio_files_metadata(root_dir: str, file_format: str):
     """Removes all the metadata from files"""
+    print("Audio file metadata suppression")
     files.update_files(
         root_dir,
         predicate=lambda file: files.file_has_format(file, file_format),
